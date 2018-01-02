@@ -10,7 +10,9 @@ module.exports = function container (get, set, clear) {
     description: 'Simple strategy that buys and sells at predefined percentages with built in stop-loss and market-up rebuying functionality.',
 
     getOptions: function () {
-      this.option('period', 'period length', String, '3m')
+      this.option('period', 'period length, same as --periodLength', String, '20m')
+      this.option('periodLength', 'period length, same as --period', String, '20m')
+      this.option('min_periods', 'min. number of history periods', Number, 30)
       this.option('buyat', 'Buy when the price surges to x% of the bought price or current balance on initial start (e.g. 1.15 for 15%).', Number, '1.05')
       this.option('sellat', 'Buy again if the price goes down to u% (0.97 for 3%) of the sold price.', Number, '0.97')
       this.option('stop_loss_pct', 'Sell when the price drops below y% (0.95 for 5%) of the bought price.', Number, '0.95')
