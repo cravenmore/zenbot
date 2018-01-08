@@ -28,6 +28,7 @@ module.exports = function container (get, set, clear) {
       .option('--asset_capital <amount>', 'for paper trading, amount of start capital in asset', Number, c.asset_capital)
       .option('--avg_slippage_pct <pct>', 'avg. amount of slippage to apply to paper trades', Number, c.avg_slippage_pct)
       .option('--buy_pct <pct>', 'buy with this % of currency balance', Number, c.buy_pct)
+      .option('--buy_max_amt <amt>', 'buy with up to this amount of currency balance', Number, c.buy_max_amt)
       .option('--sell_pct <pct>', 'sell with this % of asset balance', Number, c.sell_pct)
       .option('--markdown_buy_pct <pct>', '% to mark down buy price', Number, c.markdown_buy_pct)
       .option('--markup_sell_pct <pct>', '% to mark up sell price', Number, c.markup_sell_pct)
@@ -112,7 +113,7 @@ module.exports = function container (get, set, clear) {
           ].join('') + '\n')
           process.stdout.write([
             z(15, (so.mode === 'paper' ? '      ' : (so.mode === 'live' && (so.manual === false || typeof so.manual === 'undefined')) ? '       ' + 'AUTO'.black.bgRed + '    ' : '       ' + 'MANUAL'.black.bgGreen + '  '), ' '),
-            z(13, so.periodLength, ' '),
+            z(13, so.period_length, ' '),
             z(29, (so.order_type === 'maker' ? so.order_type.toUpperCase().green : so.order_type.toUpperCase().red), ' '),
             z(31, (so.mode === 'paper' ? 'avg. '.grey + so.avg_slippage_pct + '%' : 'max '.grey + so.max_slippage_pct + '%'), ' '),
             z(20, (so.order_type === 'maker' ? so.order_type + ' ' + s.exchange.makerFee : so.order_type + ' ' + s.exchange.takerFee), ' ')
@@ -338,7 +339,7 @@ module.exports = function container (get, set, clear) {
         }
 
         var db_cursor, trade_cursor
-        var query_start = tb().resize(so.periodLength).subtract(so.min_periods * 2).toMilliseconds()
+        var query_start = tb().resize(so.period_length).subtract(so.min_periods * 2).toMilliseconds()
         var days = Math.ceil((new Date().getTime() - query_start) / 86400000)
         var session = null
         var sessions = get('db.sessions')
@@ -386,9 +387,11 @@ module.exports = function container (get, set, clear) {
             get('db.trades').select(opts, function (err, trades) {
               if (err) throw err
               if (!trades.length) {
-                console.log('------------------------------------------ INITIALIZE  OUTPUT ------------------------------------------')
+                var head = '------------------------------------------ INITIALIZE  OUTPUT ------------------------------------------';
+                console.log(head)
                 get('lib.output').initializeOutput(s)
-                console.log('---------------------------- STARTING ' + so.mode.toUpperCase() + ' TRADING ----------------------------')
+                var minuses = Math.floor((head.length - so.mode.length - 19) / 2)
+                console.log('-'.repeat(minuses) + ' STARTING ' + so.mode.toUpperCase() + ' TRADING ' + '-'.repeat(minuses + (minuses % 2 == 0 ? 0 : 1)))
                 if (so.mode === 'paper') {
                   console.log('!!! Paper mode enabled. No real trades are performed until you remove --paper from the startup command.')
                 }
