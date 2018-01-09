@@ -22,14 +22,22 @@ module.exports = function container (get, set, clear) {
     },
 
     onPeriod: function (s, cb) {
-      if (s.period.bollinger) {
+      if (!s.in_preroll && s.period.bollinger) {
         if (s.period.bollinger.upper && s.period.bollinger.lower) {
           let upperBound = s.period.bollinger.upper[s.period.bollinger.upper.length-1]
           let lowerBound = s.period.bollinger.lower[s.period.bollinger.lower.length-1]
           if (s.period.close > (upperBound / 100) * (100 - s.options.bollinger_upper_bound_pct)) {
-            s.signal = 'sell'
+            if (s.trend !== 'down') {
+              s.acted_on_trend = false
+            }
+            s.trend = 'down'
+            s.signal = !s.acted_on_trend ? 'sell' : null
           } else if (s.period.close < (lowerBound / 100) * (100 + s.options.bollinger_lower_bound_pct)) {
-            s.signal = 'buy'
+            if (s.trend !== 'up') {
+              s.acted_on_trend = false
+            }
+            s.trend = 'up'
+            s.signal = !s.acted_on_trend ? 'buy' : null
           } else {
             s.signal = 'null' // hold
           }
